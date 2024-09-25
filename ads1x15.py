@@ -104,6 +104,15 @@ _GAINS_V = (
     0.256  # 16x
 )
 
+# Same as _GAINS_V, but for milliVolt conversions
+_GAINS_mV = (
+    6144,  # 2/3x
+    4096,  # 1x
+    2048,  # 2x
+    1024,  # 4x
+    512,  # 8x
+    256,  # 16x
+)
 _CHANNELS = {
     (0, None): _MUX_SINGLE_0,
     (1, None): _MUX_SINGLE_1,
@@ -143,8 +152,20 @@ class ADS1115:
         self.i2c.readfrom_mem_into(self.address, register, self.temp2)
         return (self.temp2[0] << 8) | self.temp2[1]
 
-    def raw_to_v(self, raw):
-        v_p_b = _GAINS_V[self.gain] / 32768
+    def raw_to_v(self, raw: int, mV: bool = False):
+        """
+        Converts the raw ADC value to a voltage value.
+
+        Args:
+            raw: The raw ADC value
+            mV: If True, the voltage is returned as a milliVolt value,
+                Default is to return it as Volts.
+
+        Returns:
+            Raw ADC value converted to a voltage or mV value as a float.
+        """
+        g_map = _GAINS_V if not mV else _GAINS_mV
+        v_p_b = g_map[self.gain] / 32768
         return raw * v_p_b
 
     def set_conv(self, rate=4, channel1=0, channel2=None):
